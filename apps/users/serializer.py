@@ -1,31 +1,38 @@
 from rest_framework import serializers
-from apps.users.models import User
+
+from apps.user.models import Users
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ("username", "first_name", "last_name", "phome_num",)
-
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(max_lenght = 155, write_only = True)
-    password_2 = serializers.CharField(max_lenght = 155, write_only = True)
-
-    class Meta:
-        model = User
-        fields = ('username', 'first_name', 'last_name', 'phone_num', 'email', 'password', 'password_2')
-
-    def validate(self, attrs):
-        if attrs['password'] != attrs['password_2']:
-            raise serializers.ValidationError({'password' : 'Пароль не совподает'})
-        if '+996' not in attrs['phone_num']:
-            raise serializers.ValidationError('Номер должен быть в формате +996')
-        return attrs
+        model = Users
+        fields = ('id', 'username', 'email', 'phone_number', 'created_at')
         
+        
+class RegisterUserSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(
+        max_length=100,
+        write_only = True
+    )
+    password2 = serializers.CharField(
+        max_length=100,
+        write_only = True
+    )
+    class Meta:
+        model = Users
+        fields = ('id', 'username', 'email', 'phone_number', 'created_at', 'password', 'password2')
+        
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({'password2': "Пароли отличаются"})
+        if '+996' not in attrs['phone_number']:
+            raise serializers.ValidationError("Номер телефона должен быть в формате +996XXXXXXXXX")
+        return attrs
+    
     def create(self, values):
-        user = User.objects.create(
-            username = values['username'], first_name=values['first_name'], last_name=values['last_name']
-            phone_num = values['phone_num'], email=values['email']
+        user = Users.objects.create(
+            username=values['username'], phone_number=values['phone_number'],
+            email=values['email'],
         )
-        user.set_password(values{'password'})
+        user.set_password(values['password'])
         user.save()
         return user
